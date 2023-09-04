@@ -2,7 +2,7 @@ from .models import Product, Buyer, RegisterForm, UserCart, SelectedProduct, Sto
 from .forms import RegistrationForm, DjangoRegistrationForm, LoginForm,PasswordResetRequestForm
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.tokens import default_token_generator
@@ -18,8 +18,13 @@ from datetime import datetime
 from django.db import IntegrityError, transaction
 from django.db.models import F, Sum
 from django.http import JsonResponse
+from django.contrib.auth import get_user_model
 import logging
 import json
+
+def check_manager_status(request):
+    is_authuser = request.user.groups.filter(name='manager').exists()
+    return JsonResponse({'is_authuser': is_authuser})
 
 # Вью для демонстрационной страницы
 def demo_page(request):
@@ -122,17 +127,18 @@ def login_view(request):
     print('Функция login_view вызвана')
     return render(request, 'login.html')
 
+
+    
 # Защита от неавторизованных пользователей, вью для dashboard
 @login_required
 def dashboard(request):
     products = Product.objects.annotate(remaining_quantity=Sum('stock__quantity')).all()
     saved_carts = UserCart.objects.filter(user=request.user)
     print('Сохраненные корзины: ', saved_carts)
-    return render(request, 'user.html', {'products': products, 'saved_carts': saved_carts})
+    return render(request, 'user.html', {'products': products, 'saved_carts': saved_carts, 'is_authuser': check_manager_status(request),})
     
 # Функция для добавления товара в корзину
-from django.contrib.auth import get_user_model
-from .models import Product, Buyer, RegisterForm, SelectedProduct, UserCart
+
 #Добавление товаров в корзину
 def add_to_cart(request):
     if request.method == 'POST':
@@ -218,6 +224,7 @@ def save_cart(request):
         return JsonResponse({'success': True})
     return JsonResponse({'error': 'Неверный метод запроса.'}, status=400)
 
+
 # Функция удаления корзины
 @login_required
 @csrf_exempt
@@ -293,7 +300,7 @@ def password_reset_confirm(request, uidb64, token):
         return render(request, 'password_reset_invalid.html')
     
     
-# TRANSFERS 
+# Перемещение на склад WAREHOUSE
 
 def manage_warehouse(request):
     if request.method == 'POST':
@@ -313,3 +320,8 @@ def manage_warehouse(request):
     products = Product.objects.all()
     warehouses = Warehouse.objects.all()
     return render(request, 'warehouse_form.html', {'products': products, 'warehouses': warehouses})
+
+@user_passes_test(check_manager_status)
+def check(request):
+    is_authuser = request.user.groups.filter(name='manager').exists()
+    return JsonResponse({'is_authuser': is_authuser})
