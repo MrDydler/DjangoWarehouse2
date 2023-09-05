@@ -47,6 +47,8 @@ urlpatterns = [
     path('reset/done/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
     #перенос склад-прод
     path('manage_warehouse/', views.manage_warehouse, name='manage_warehouse'),
+    #path('move_item_form/', views.move_item_form, name='move_item_form'),
+    path('move_item/', views.move_item, name='move_item'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

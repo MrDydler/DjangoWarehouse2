@@ -72,7 +72,7 @@ class Stock(models.Model):
 class SelectedProduct(models.Model):
     user_cart = models.ForeignKey(UserCart, on_delete=models.CASCADE, null=True)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.PositiveIntegerField(default=1)
+    quantity = models.PositiveIntegerField(default=1, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -89,7 +89,7 @@ class User(models.Model):
 #Модель переноса   
 class Warehouse(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.PositiveIntegerField()
+    quantity = models.PositiveIntegerField(default=0)
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -99,7 +99,7 @@ class Warehouse(models.Model):
         stock, _ = Stock.objects.get_or_create(product=self.product)
         print('self.quantity ', self.quantity)
         print('stock.quantity ', stock.quantity)
-        stock.quantity = stock.quantity - self.quantity
+        #stock.quantity = stock.quantity - self.quantity
         stock.save()
     def __str__(self):
         return f"{self.product.name} на складе {self.quantity} шт"

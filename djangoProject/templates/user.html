@@ -69,7 +69,34 @@
         {% endfor %}
     </div>
 
-
+    <div id="warehouseTransferForm" class='show' style="display: none;">
+        <form method="post" action="{% url 'move_item' %}">
+            {% csrf_token %}
+            
+            <div class="form-field">
+                <label for="product">Выберите продукт</label>
+                <select id="product" name="product">
+                    {% for product in products %}
+                        <option value="{{ product.id }}">{{ product.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-field">
+                <label for="quantity">Введите количество</label>
+                <input type="number" id="quantity" name="quantity" min="1" required>
+            </div>
+    
+            <div class="form-field">
+                <label>Переместить куда</label><br>
+                <input type="radio" id="move_to_warehouse" name="action" value="move_to_warehouse">
+                <label for="move_to_warehouse">На склад</label><br>
+                <input type="radio" id="move_to_products" name="action" value="move_to_products">
+                <label for="move_to_products">В продукты</label><br>
+            </div>
+            <button type="submit">Переместить</button>
+        </form>
+    </div>
 
 
 
@@ -79,8 +106,12 @@
         <p>Покупайте наши украшения. После оформления покупки с Вами свяжется специалист.</p>
     </div>
     {% if is_authuser %}
-    <button class="warehouse-button" id="move-products-button">Переместить товар</button>
+    <button class="warehouse-button" id="move-products-button" onclick='toggleWarehouseForm()'>Переместить товар</button>
+    <script>
+        const moveItemURL = "{% url 'move_item' %}";
+    </script>
     {% endif %}
+
     <script>
         // Check if the button should be displayed for the current user
         const isAuthUser = {{ is_authuser|yesno:"true,false" }};
@@ -91,6 +122,8 @@
         }
     </script>
     
+    <script src="{% static 'transferProductForm.js' %}"></script>
+    <script src="{% static 'managerCheck.js' %}"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="{% static 'delete_cart.js' %}"></script>
     <script src="{% static 'buy_product.js' %}"></script>

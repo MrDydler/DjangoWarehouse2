@@ -60,3 +60,21 @@ if (successFlag === 'True') {
     var successMessage = document.getElementById('successMessage');
     successMessage.style.display = 'block';
 }
+
+// показать форму перемщения на склад
+function toggleWarehouseForm(){
+    var regContainer = document.getElementById('warehouseTransferForm');
+    var overlay = document.getElementById('overlay');
+    //var overlayDisplay = getComputedStyle(overlay).display;
+    var formDisplay = getComputedStyle(warehouseTransferForm).display;
+    if (formDisplay === 'none') {
+        regContainer.style.display = 'flex';
+        overlay.style.display = 'flex';
+}
+    else {
+        regContainer.style.display = 'none';
+        overlay.style.display = 'none';
+    }
+}
+
+

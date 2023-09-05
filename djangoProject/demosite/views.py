@@ -312,6 +312,7 @@ def manage_warehouse(request):
             warehouse, created = Warehouse.objects.get_or_create(product=product)
             warehouse.quantity = quantity
             warehouse.save()
+            print('Manage_warehouse сохранен')
             return redirect('success_url')  # редирект на страницу подтверждения
         except Product.DoesNotExist:
             # продукт не найден
@@ -325,3 +326,74 @@ def manage_warehouse(request):
 def check(request):
     is_authuser = request.user.groups.filter(name='manager').exists()
     return JsonResponse({'is_authuser': is_authuser})
+
+#перемещение товара на кнопке "Переместить товар"
+#@csrf_exempt
+def move_item(request):
+    
+    # products = Product.objects.all()
+    # warehouses = Warehouse.objects.all()
+    # context = {
+    #     'products': products,
+    #     'warehouses': warehouses,
+    # }
+    
+    if request.method == 'POST':
+        product_id = request.POST.get('product')
+        quantity = request.POST.get('quantity')
+        action = request.POST.get('action')
+        print(f'Received product_id: {product_id}')
+        print(f'Received quantity: {quantity}')
+        print(f'action: {action}')
+        # Fixed this line to print quantity correctly
+        try:
+            product = Product.objects.get(pk=product_id)
+            warehouse, created = Warehouse.objects.get_or_create(product=product)
+            stock, _ = Stock.objects.get_or_create(product=product)
+
+            if action == 'move_to_warehouse':
+                # Move item from products to warehouse
+                if stock.quantity > 0:
+                    
+                    stock.quantity = int(stock.quantity) - int(quantity)
+                    print(f'Stock.quantity: ' , stock.quantity)
+                    print(f'stock.quantity - quantity', int(stock.quantity) - int(quantity))
+                    print(f'stock.quantity переменная: ', stock.quantity)
+                    stock.save()
+                    print('stock после сохранения ', stock)
+                    warehouse.quantity += int(quantity)
+                    warehouse.save()
+                else:
+                    return JsonResponse({'status': 'error', 'message': 'Not enough product in stock.'})
+            elif action == 'move_to_products':
+                # Move item from warehouse to products
+                if warehouse.quantity >= int(quantity):
+                    print('warehouse.quantity ', warehouse.quantity)
+                    warehouse.quantity -= int(quantity)
+                    print('warehouse.quantity после вычитания', warehouse.quantity)
+                    stock.quantity += int(quantity)
+                    print('stock.quantity ', stock.quantity)
+                    stock.save()
+                    warehouse.save()
+                else:
+                    return JsonResponse({'status': 'error', 'message': 'Not enough product in warehouse.'})
+            else:
+                return JsonResponse({'status': 'error', 'message': 'Invalid action.'})
+
+            return JsonResponse({'status': 'success'})
+        except Product.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Product not found.'})
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})
+    
+    
+# def move_item_form(request):
+#     products = Product.objects.all()
+#     warehouses = Warehouse.objects.all()
+    
+#     context = {
+#         'products': products,
+#         'warehouses': warehouses,
+#     }
+    
+#     return render(request, 'move_item_form.html', context)
